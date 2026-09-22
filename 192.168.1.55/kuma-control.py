@@ -11,6 +11,7 @@ import struct
 KUMA_HOST = "10.0.10.20"
 KUMA_PORT = 3001
 TAG_NAME = "HOMEDOMENAS05"
+_ws_buffer = b""
 
 
 def recv_exact(sock, length):
@@ -48,6 +49,9 @@ def ws_connect():
     if b"101 Switching Protocols" not in response:
         raise RuntimeError("WebSocket-Handshake fehlgeschlagen")
 
+    global _ws_buffer
+    _ws_buffer = response.split(b"\r\n\r\n", 1)[1]
+
     return sock
 
 
@@ -68,7 +72,13 @@ def ws_send(sock, payload):
 
 
 def ws_recv(sock):
-    first = recv_exact(sock, 2)
+    global _ws_buffer
+
+    if _ws_buffer:
+        first = _ws_buffer[:2]
+        _ws_buffer = _ws_buffer[2:]
+    else:
+        first = recv_exact(sock, 2)
     if first is None:
         return None
 
@@ -184,7 +194,7 @@ def login_and_get_monitors():
 
             if message.startswith("43"):
                 try:
-                    ack = json.loads(message[2:])
+                    ack = json.loads(message[3:])
                     if ack and isinstance(ack[0], dict) and ack[0].get("ok"):
                         login_ok = True
                 except Exception:
