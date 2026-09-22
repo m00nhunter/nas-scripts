@@ -58,7 +58,8 @@ def ws_connect():
         raise RuntimeError("WebSocket-Handshake fehlgeschlagen")
 
     global _ws_buffer
-    _ws_buffer = response.split(b"\r\n\r\n", 1)[1]
+    header, body = response.split(b"\r\n\r\n", 1)
+    _ws_buffer = body
 
     return sock
 
@@ -81,6 +82,7 @@ def ws_send(sock, payload):
 
 def ws_recv(sock):
     first = recv_exact(sock, 2)
+
     if first is None:
         return None
 
@@ -155,16 +157,14 @@ def login_and_get_monitors():
     sock = ws_connect()
 
     try:
-        # Engine.IO open packet
         packet = ws_recv(sock)
+
         if not packet or not packet.startswith("0"):
             raise RuntimeError("Engine.IO-Verbindung fehlgeschlagen")
 
-        # Socket.IO connect
         ws_send(sock, "40")
         wait_for(sock, lambda p: p.startswith("40"))
 
-        # Login mit ACK-ID 1
         login = [
             "login",
             {
@@ -173,6 +173,7 @@ def login_and_get_monitors():
                 "token": None
             }
         ]
+
         ws_send(sock, "421" + json.dumps(login, separators=(",", ":")))
 
         monitor_list = None
@@ -237,7 +238,11 @@ def tagged_monitors(monitor_list):
 
 def change_monitor(sock, monitor_id, action, ack_id):
     command = [action, monitor_id]
-    ws_send(sock, f"42{ack_id}" + json.dumps(command, separators=(",", ":")))
+
+    ws_send(
+        sock,
+        f"42{ack_id}" + json.dumps(command, separators=(",", ":"))
+    )
 
     def matching_ack(message):
         return message.startswith("43" + str(ack_id))
@@ -246,7 +251,11 @@ def change_monitor(sock, monitor_id, action, ack_id):
 
     try:
         payload = json.loads(response[2 + len(str(ack_id)):])
-        return bool(payload and isinstance(payload[0], dict) and payload[0].get("ok"))
+        return bool(
+            payload
+            and isinstance(payload[0], dict)
+            and payload[0].get("ok")
+        )
     except Exception:
         return False
 
