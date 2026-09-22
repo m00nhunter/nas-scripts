@@ -15,12 +15,20 @@ _ws_buffer = b""
 
 
 def recv_exact(sock, length):
+    global _ws_buffer
     data = b""
+
+    if _ws_buffer:
+        take = min(length, len(_ws_buffer))
+        data = _ws_buffer[:take]
+        _ws_buffer = _ws_buffer[take:]
+
     while len(data) < length:
         chunk = sock.recv(length - len(data))
         if not chunk:
             return None
         data += chunk
+
     return data
 
 
@@ -72,13 +80,7 @@ def ws_send(sock, payload):
 
 
 def ws_recv(sock):
-    global _ws_buffer
-
-    if _ws_buffer:
-        first = _ws_buffer[:2]
-        _ws_buffer = _ws_buffer[2:]
-    else:
-        first = recv_exact(sock, 2)
+    first = recv_exact(sock, 2)
     if first is None:
         return None
 
