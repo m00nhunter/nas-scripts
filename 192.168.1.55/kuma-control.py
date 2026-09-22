@@ -10,7 +10,10 @@ import struct
 
 KUMA_HOST = "10.0.10.20"
 KUMA_PORT = 3001
+KUMA_USER = "admin"
+KUMA_PASS = "MeMy$e1f"
 TAG_NAME = "HOMEDOMENAS05"
+
 _ws_buffer = b""
 
 
@@ -33,6 +36,8 @@ def recv_exact(sock, length):
 
 
 def ws_connect():
+    global _ws_buffer
+
     key = base64.b64encode(os.urandom(16)).decode()
     sock = socket.create_connection((KUMA_HOST, KUMA_PORT), timeout=10)
 
@@ -57,8 +62,7 @@ def ws_connect():
     if b"101 Switching Protocols" not in response:
         raise RuntimeError("WebSocket-Handshake fehlgeschlagen")
 
-    global _ws_buffer
-    header, body = response.split(b"\r\n\r\n", 1)
+    _, body = response.split(b"\r\n\r\n", 1)
     _ws_buffer = body
 
     return sock
@@ -146,14 +150,6 @@ def wait_for(sock, predicate, timeout=10):
 
 
 def login_and_get_monitors():
-    username = os.environ.get("KUMA_USER")
-    password = os.environ.get("KUMA_PASS")
-
-    if not username or not password:
-        raise RuntimeError(
-            "KUMA_USER und KUMA_PASS müssen als Umgebungsvariablen gesetzt sein"
-        )
-
     sock = ws_connect()
 
     try:
@@ -168,8 +164,8 @@ def login_and_get_monitors():
         login = [
             "login",
             {
-                "username": username,
-                "password": password,
+                "username": KUMA_USER,
+                "password": KUMA_PASS,
                 "token": None
             }
         ]
