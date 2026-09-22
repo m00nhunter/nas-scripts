@@ -1,5 +1,64 @@
 #!/usr/bin/env python3
 
+# =============================================================================
+# Uptime Kuma – Synology DSM 7
+# =============================================================================
+#
+# Zweck:
+# Dieses Script steuert die Uptime-Kuma-Monitore, die mit dem Tag
+# "HOMEDOMENAS05" versehen sind.
+#
+#   pause  -> pausiert alle Monitore mit diesem Tag
+#   resume -> aktiviert alle Monitore mit diesem Tag wieder
+#
+# Dadurch können bei einem geplanten Herunterfahren der Synology die
+# erwarteten "DOWN"-Meldungen von Uptime Kuma verhindert werden. Nach dem
+# Neustart werden die betreffenden Monitore automatisch wieder aktiviert.
+#
+# Die Auswahl erfolgt ausschließlich über den Tag "HOMEDOMENAS05".
+# Neue Monitore müssen deshalb nicht im Script eingetragen werden: Es reicht,
+# ihnen in Uptime Kuma diesen Tag zuzuweisen.
+#
+# -----------------------------------------------------------------------------
+# Einrichtung auf Synology DSM 7
+# -----------------------------------------------------------------------------
+#
+# 1. Script auf der Synology speichern, z. B. als:
+#      /volume1/scripts/kuma-control.py
+#
+# 2. Ausführbar machen:
+#      chmod +x /volume1/scripts/kuma-control.py
+#
+# 3. Manuell testen:
+#      python3 /volume1/scripts/kuma-control.py pause
+#      python3 /volume1/scripts/kuma-control.py resume
+#
+#    Nach dem Test sollten in Uptime Kuma alle Monitore mit dem Tag
+#    "HOMEDOMENAS05" entsprechend pausiert bzw. wieder aktiviert sein.
+#
+# 4. In DSM unter:
+#      Systemsteuerung -> Aufgabenplaner
+#    eine Aufgabe als "Benutzerdefiniertes Skript" mit Benutzer "root"
+#    erstellen.
+#
+#    Aufgabe für das Herunterfahren:
+#      python3 /volume1/scripts/kuma-control.py pause
+#    Ausführung: Beim Herunterfahren
+#
+#    Aufgabe für den Start:
+#      python3 /volume1/scripts/kuma-control.py resume
+#    Ausführung: Beim Hochfahren
+#
+# 5. Die beiden Aufgaben können zunächst manuell über den Aufgabenplaner
+#    ausgeführt werden. Erst danach sollte man einen echten Neustart bzw.
+#    ein Herunterfahren zum Test durchführen.
+#
+# Hinweis:
+# Das Script verwendet die Zugangsdaten von Uptime Kuma aus den Einstellungen
+# weiter unten. Das Repository sollte deshalb privat bleiben.
+#
+# =============================================================================
+
 import sys
 import json
 import time
