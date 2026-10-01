@@ -1,0 +1,21 @@
+services:
+  openrgb:
+    image: swensorm/openrgb:openrgb-0.9-gui-v4.9.0
+    container_name: openrgb
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Zurich
+      - USER_ID=0
+      - GROUP_ID=0
+    ports:
+      - "15800:5800"
+      - "6742:6742"
+    devices:
+      - /dev/hidraw3:/dev/hidraw3
+      - /dev/hidraw4:/dev/hidraw4
+      - /dev/hidraw5:/dev/hidraw5
+    volumes:
+      - openrgb_config:/config/xdg/config/OpenRGB
+
+volumes:
+  openrgb_config:
